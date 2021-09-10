@@ -23,6 +23,6 @@ spec:
   parameters:
     mode: "allowlist"
     locations:
-      - "europe-west2"
-      - "europe-north1"
+      - "northamerica-northeast1"
+      - "northamerica-northeast2"
     exemptions: []
