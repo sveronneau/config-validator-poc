@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket  = "commons-build"
+    bucket  = "validator-poc-tf"
     prefix  = "tf-demo/state-dev/app1"
   }
 }
