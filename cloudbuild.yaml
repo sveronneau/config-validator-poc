@@ -22,4 +22,4 @@ steps:
   - terraform.json
   - --policy-path=../../../policy-library/
   - --project
-  - "validator-poc-325613"
+  - "commons-build"
