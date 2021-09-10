@@ -16,17 +16,13 @@ apiVersion: constraints.gatekeeper.sh/v1alpha1
 kind: GCPStorageLocationConstraintV1
 metadata:
   name: allow_some_storage_location
-  annotations:
-    description: Checks Cloud Storage bucket locations against allowed or disallowed
-      locations.
-    bundles.validator.forsetisecurity.org/healthcare-baseline-v1: security
 spec:
   severity: high
   match:
-    target: # {"$ref":"#/definitions/io.k8s.cli.setters.target"}
-    - "organizations/**"
+    target: ["organization/*"]
   parameters:
     mode: "allowlist"
     locations:
-    - northamerica-northeast1
+      - "europe-west2"
+      - "europe-north1"
     exemptions: []
