@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket  = "cf-tf-seed-bucket"
+    bucket  = "validator-poc-tf"
     prefix  = "tf-demo/state-dev/app1"
   }
 }
