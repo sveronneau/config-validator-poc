@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-package templates.gcp.GCPAlwaysViolatesConstraintV1
+package templates.gcp.GCPGKENodeAutoUpgradeConstraintV1
 
 import data.validator.gcp.lib as lib
 
@@ -23,12 +23,24 @@ deny[{
 	"details": metadata,
 }] {
 	constraint := input.constraint
-	lib.get_constraint_info(constraint, info)
 	asset := input.asset
+	asset.asset_type == "container.googleapis.com/Cluster"
 
-	message := sprintf("%v violates on all resources.", [info.name])
-	metadata := {
-		"constraint": info,
-		"asset": asset,
-	}
+	container := asset.resource.data
+	node_pools := lib.get_default(container, "nodePools", [])
+	node_pool := node_pools[_]
+	not auto_upgrade_enabled(node_pool)
+
+	message := sprintf("Auto upgrade is not enabled on node pool '%v'.", [node_pool.name])
+
+	metadata := {"resource": asset.name, "node_pool": node_pool.name}
+}
+
+###########################
+# Rule Utilities
+###########################
+auto_upgrade_enabled(node_pool) {
+	management := lib.get_default(node_pool, "management", {})
+	auto_upgrade_enabled := lib.get_default(management, "autoUpgrade", false)
+	auto_upgrade_enabled == true
 }

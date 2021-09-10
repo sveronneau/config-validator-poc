@@ -14,21 +14,17 @@
 # limitations under the License.
 #
 
-package templates.gcp.GCPAlwaysViolatesConstraintV1
+package templates.gcp.GCPBigQueryCMEKEncryptionConstraintV1
 
-import data.validator.gcp.lib as lib
+all_violations[violation] {
+	resource := data.test.fixtures.bigquery_cmek.assets[_]
+	constraint := data.test.fixtures.bigquery_cmek.constraints
+	issues := deny with input.asset as resource
+	violation := issues[_]
+}
 
-deny[{
-	"msg": message,
-	"details": metadata,
-}] {
-	constraint := input.constraint
-	lib.get_constraint_info(constraint, info)
-	asset := input.asset
-
-	message := sprintf("%v violates on all resources.", [info.name])
-	metadata := {
-		"constraint": info,
-		"asset": asset,
-	}
+test_bigquery_cmek_logic {
+	violation := all_violations[_]
+	count(all_violations) == 1
+	violation.details.resource == "//bigquery.googleapis.com/projects/anand-spanner/datasets/anand_bq_test_3/tables/test_google_encryption_key"
 }

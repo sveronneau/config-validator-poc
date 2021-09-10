@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-package templates.gcp.GCPAlwaysViolatesConstraintV1
+package templates.gcp.GCPSQLAllowedAuthorizedNetworksV1
 
 import data.validator.gcp.lib as lib
 
@@ -23,12 +23,24 @@ deny[{
 	"details": metadata,
 }] {
 	constraint := input.constraint
-	lib.get_constraint_info(constraint, info)
-	asset := input.asset
+	lib.get_constraint_params(constraint, params)
 
-	message := sprintf("%v violates on all resources.", [info.name])
-	metadata := {
-		"constraint": info,
-		"asset": asset,
+	asset := input.asset
+	asset.asset_type == "sqladmin.googleapis.com/Instance"
+
+	allowed_authorized_networks = lib.get_default(params, "authorized_networks", [])
+	configured_networks := {network |
+		network = asset.resource.settings.ipConfiguration.authorizedNetworks[_].value
 	}
+
+	matched_networks := {network |
+		network = configured_networks[_]
+		allowed_authorized_networks[_] == network
+	}
+
+	forbidden := configured_networks - matched_networks
+	count(forbidden) > 0
+
+	message := sprintf("%v has authorized networks that are not allowed: %v", [asset.name, forbidden])
+	metadata := {"resource": asset.name}
 }

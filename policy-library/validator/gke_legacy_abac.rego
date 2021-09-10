@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-package templates.gcp.GCPAlwaysViolatesConstraintV1
+package templates.gcp.GCPGKELegacyAbacConstraintV1
 
 import data.validator.gcp.lib as lib
 
@@ -23,12 +23,21 @@ deny[{
 	"details": metadata,
 }] {
 	constraint := input.constraint
-	lib.get_constraint_info(constraint, info)
 	asset := input.asset
+	asset.asset_type == "container.googleapis.com/Cluster"
 
-	message := sprintf("%v violates on all resources.", [info.name])
-	metadata := {
-		"constraint": info,
-		"asset": asset,
-	}
+	container := asset.resource.data
+	enabled := legacy_abac_enabled(container)
+	enabled == true
+
+	message := sprintf("%v has legacy ABAC enabled.", [asset.name])
+	metadata := {"resource": asset.name}
+}
+
+###########################
+# Rule Utilities
+###########################
+legacy_abac_enabled(container) = legacy_abac_enabled {
+	legacy_abac := lib.get_default(container, "legacyAbac", {})
+	legacy_abac_enabled := lib.get_default(legacy_abac, "enabled", false)
 }

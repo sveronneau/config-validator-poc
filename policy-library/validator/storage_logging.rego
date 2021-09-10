@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-package templates.gcp.GCPAlwaysViolatesConstraintV1
+package templates.gcp.GCPStorageLoggingConstraintV1
 
 import data.validator.gcp.lib as lib
 
@@ -23,12 +23,24 @@ deny[{
 	"details": metadata,
 }] {
 	constraint := input.constraint
-	lib.get_constraint_info(constraint, info)
 	asset := input.asset
+	asset.asset_type == "storage.googleapis.com/Bucket"
 
-	message := sprintf("%v violates on all resources.", [info.name])
+	bucket := asset.resource.data
+	destination := destination_bucket(bucket)
+	destination == ""
+
+	message := sprintf("%v does not have the required logging destination.", [asset.name])
 	metadata := {
-		"constraint": info,
-		"asset": asset,
+		"destination_bucket": destination,
+		"resource": asset.name,
 	}
+}
+
+###########################
+# Rule Utilities
+###########################
+destination_bucket(bucket) = destination_bucket {
+	destination := lib.get_default(bucket, "logging", "default")
+	destination_bucket := lib.get_default(destination, "logBucket", "")
 }

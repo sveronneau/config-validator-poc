@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-package templates.gcp.GCPAlwaysViolatesConstraintV1
+package templates.gcp.GCPGKEDashboardConstraintV1
 
 import data.validator.gcp.lib as lib
 
@@ -23,12 +23,22 @@ deny[{
 	"details": metadata,
 }] {
 	constraint := input.constraint
-	lib.get_constraint_info(constraint, info)
 	asset := input.asset
+	asset.asset_type == "container.googleapis.com/Cluster"
 
-	message := sprintf("%v violates on all resources.", [info.name])
-	metadata := {
-		"constraint": info,
-		"asset": asset,
-	}
+	container := asset.resource.data
+	disabled := dashboard_disabled(container)
+	disabled == false
+
+	message := sprintf("%v has kubernetes dashboard enabled.", [asset.name])
+	metadata := {"resource": asset.name}
+}
+
+###########################
+# Rule Utilities
+###########################
+dashboard_disabled(container) = dashboard_disabled {
+	addons_config := lib.get_default(container, "addonsConfig", "default")
+	dashboard := lib.get_default(addons_config, "kubernetesDashboard", "default")
+	dashboard_disabled := lib.get_default(dashboard, "disabled", false)
 }

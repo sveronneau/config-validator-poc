@@ -16,19 +16,15 @@
 
 package templates.gcp.GCPAlwaysViolatesConstraintV1
 
-import data.validator.gcp.lib as lib
+# Confirm total violations count
+always_violates_all_violations[output] {
+	resource := data.test.fixtures.always_violates.assets[_]
+	constraint := data.test.fixtures.always_violates.constraints.always_violates_all
 
-deny[{
-	"msg": message,
-	"details": metadata,
-}] {
-	constraint := input.constraint
-	lib.get_constraint_info(constraint, info)
-	asset := input.asset
+	output := deny[_] with input.asset as resource
+		 with input.constraint as constraint
+}
 
-	message := sprintf("%v violates on all resources.", [info.name])
-	metadata := {
-		"constraint": info,
-		"asset": asset,
-	}
+test_always_violates_all_violations {
+	count(always_violates_all_violations) == count(data.test.fixtures.always_violates.assets)
 }

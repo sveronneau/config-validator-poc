@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-package templates.gcp.GCPAlwaysViolatesConstraintV1
+package templates.gcp.GCPBigQueryCMEKEncryptionConstraintV1
 
 import data.validator.gcp.lib as lib
 
@@ -22,13 +22,16 @@ deny[{
 	"msg": message,
 	"details": metadata,
 }] {
-	constraint := input.constraint
-	lib.get_constraint_info(constraint, info)
 	asset := input.asset
+	asset.asset_type == "bigquery.googleapis.com/Table"
 
-	message := sprintf("%v violates on all resources.", [info.name])
-	metadata := {
-		"constraint": info,
-		"asset": asset,
-	}
+	# Find KMS key name for the table
+	encryptionConfiguration := lib.get_default(asset.resource.data, "encryptionConfiguration", {})
+	kmsKeyName := lib.get_default(encryptionConfiguration, "kmsKeyName", "NOTFOUND")
+
+	# Check if KMS is enabled
+	kmsKeyName == "NOTFOUND"
+
+	message := sprintf("%v does not have the client managed encryption key setup.", [asset.name])
+	metadata := {"resource": asset.name}
 }

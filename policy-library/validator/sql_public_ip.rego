@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-package templates.gcp.GCPAlwaysViolatesConstraintV1
+package templates.gcp.GCPSQLPublicIpConstraintV1
 
 import data.validator.gcp.lib as lib
 
@@ -22,13 +22,13 @@ deny[{
 	"msg": message,
 	"details": metadata,
 }] {
-	constraint := input.constraint
-	lib.get_constraint_info(constraint, info)
 	asset := input.asset
+	asset.asset_type == "sqladmin.googleapis.com/Instance"
 
-	message := sprintf("%v violates on all resources.", [info.name])
-	metadata := {
-		"constraint": info,
-		"asset": asset,
-	}
+	ip_config := lib.get_default(asset.resource.data.settings, "ipConfiguration", {})
+	ipv4 := lib.get_default(ip_config, "ipv4Enabled", true)
+	ipv4 == true
+
+	message := sprintf("%v is not allowed to have a Public IP.", [asset.name])
+	metadata := {"resource": asset.name}
 }

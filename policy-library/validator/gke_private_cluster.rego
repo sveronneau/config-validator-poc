@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-package templates.gcp.GCPAlwaysViolatesConstraintV1
+package templates.gcp.GCPGKEPrivateClusterConstraintV1
 
 import data.validator.gcp.lib as lib
 
@@ -23,12 +23,13 @@ deny[{
 	"details": metadata,
 }] {
 	constraint := input.constraint
-	lib.get_constraint_info(constraint, info)
 	asset := input.asset
+	asset.asset_type == "container.googleapis.com/Cluster"
 
-	message := sprintf("%v violates on all resources.", [info.name])
-	metadata := {
-		"constraint": info,
-		"asset": asset,
-	}
+	cluster := asset.resource.data
+	private_cluster_config := lib.get_default(cluster, "privateClusterConfig", {})
+	private_cluster_config == {}
+
+	message := sprintf("Cluster %v is not private.", [asset.name])
+	metadata := {"resource": asset.name}
 }

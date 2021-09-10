@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Google LLC
+# Copyright 2019 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-package templates.gcp.GCPAlwaysViolatesConstraintV1
+package templates.gcp.GCPStorageCMEKEncryptionConstraintV1
 
 import data.validator.gcp.lib as lib
 
@@ -23,12 +23,24 @@ deny[{
 	"details": metadata,
 }] {
 	constraint := input.constraint
-	lib.get_constraint_info(constraint, info)
 	asset := input.asset
+	asset.asset_type == "storage.googleapis.com/Bucket"
 
-	message := sprintf("%v violates on all resources.", [info.name])
+	bucket := asset.resource.data
+	kms_key_name := default_kms_key_name(bucket)
+	kms_key_name == ""
+
+	message := sprintf("%v does not have the required CMEK encryption configured.", [asset.name])
 	metadata := {
-		"constraint": info,
-		"asset": asset,
+		"default_kms_key_name": kms_key_name,
+		"resource": asset.name,
 	}
+}
+
+###########################
+# Rule Utilities
+###########################
+default_kms_key_name(bucket) = default_kms_key_name {
+	encryption := lib.get_default(bucket, "encryption", {})
+	default_kms_key_name := lib.get_default(encryption, "defaultKmsKeyName", "")
 }

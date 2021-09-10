@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-package templates.gcp.GCPAlwaysViolatesConstraintV1
+package templates.gcp.GCPStorageBucketPolicyOnlyConstraintV1
 
 import data.validator.gcp.lib as lib
 
@@ -23,12 +23,21 @@ deny[{
 	"details": metadata,
 }] {
 	constraint := input.constraint
-	lib.get_constraint_info(constraint, info)
 	asset := input.asset
+	asset.asset_type == "storage.googleapis.com/Bucket"
 
-	message := sprintf("%v violates on all resources.", [info.name])
-	metadata := {
-		"constraint": info,
-		"asset": asset,
-	}
+	bucket := asset.resource.data
+	bucket_policy_enabled(bucket) != true
+
+	message := sprintf("%v does not have bucket policy only enabled.", [asset.name])
+	metadata := {"resource": asset.name}
+}
+
+###########################
+# Rule Utilities
+###########################
+bucket_policy_enabled(bucket) = bucket_policy_enabled {
+	iam_configuration := lib.get_default(bucket, "iamConfiguration", {})
+	bucket_policy_only := lib.get_default(iam_configuration, "bucketPolicyOnly", {})
+	bucket_policy_enabled := lib.get_default(bucket_policy_only, "enabled", null)
 }

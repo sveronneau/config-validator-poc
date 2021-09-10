@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-package templates.gcp.GCPAlwaysViolatesConstraintV1
+package templates.gcp.GCPGKEMasterAuthorizedNetworksEnabledConstraintV1
 
 import data.validator.gcp.lib as lib
 
@@ -23,12 +23,21 @@ deny[{
 	"details": metadata,
 }] {
 	constraint := input.constraint
-	lib.get_constraint_info(constraint, info)
 	asset := input.asset
+	asset.asset_type == "container.googleapis.com/Cluster"
 
-	message := sprintf("%v violates on all resources.", [info.name])
-	metadata := {
-		"constraint": info,
-		"asset": asset,
-	}
+	cluster := asset.resource.data
+	master_auth_network_disabled(cluster)
+
+	message := sprintf("Master authorized networks is not being used in cluster %v.", [asset.name])
+	metadata := {"resource": asset.name}
+}
+
+###########################
+# Rule Utilities
+###########################
+master_auth_network_disabled(cluster) {
+	master_auth_network_config := lib.get_default(cluster, "masterAuthorizedNetworksConfig", {})
+	enabled := lib.get_default(master_auth_network_config, "enabled", false)
+	enabled == false
 }

@@ -14,21 +14,22 @@
 # limitations under the License.
 #
 
-package templates.gcp.GCPAlwaysViolatesConstraintV1
+package templates.gcp.GCPGKELegacyAbacConstraintV1
 
 import data.validator.gcp.lib as lib
 
-deny[{
-	"msg": message,
-	"details": metadata,
-}] {
-	constraint := input.constraint
-	lib.get_constraint_info(constraint, info)
-	asset := input.asset
+all_violations[violation] {
+	resource := data.test.fixtures.gke_legacy_abac.assets[_]
+	constraint := data.test.fixtures.gke_legacy_abac.constraints.disable_gke_legacy_abac
 
-	message := sprintf("%v violates on all resources.", [info.name])
-	metadata := {
-		"constraint": info,
-		"asset": asset,
-	}
+	issues := deny with input.asset as resource
+		 with input.constraint as constraint
+
+	violation := issues[_]
+}
+
+test_disable_legacy_abac_violations_basic {
+	count(all_violations) == 1
+	violation := all_violations[_]
+	violation.details.resource == "//container.googleapis.com/projects/transfer-repos/zones/us-central1-c/clusters/joe-clust"
 }

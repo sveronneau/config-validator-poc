@@ -14,21 +14,23 @@
 # limitations under the License.
 #
 
-package templates.gcp.GCPAlwaysViolatesConstraintV1
+package templates.gcp.GCPSQLPublicIpConstraintV1
 
-import data.validator.gcp.lib as lib
+all_violations[violation] {
+	resource := data.test.fixtures.sql_public_ip.assets[_]
+	constraint := data.test.fixtures.sql_public_ip.constraints
 
-deny[{
-	"msg": message,
-	"details": metadata,
-}] {
-	constraint := input.constraint
-	lib.get_constraint_info(constraint, info)
-	asset := input.asset
+	issues := deny with input.asset as resource
 
-	message := sprintf("%v violates on all resources.", [info.name])
-	metadata := {
-		"constraint": info,
-		"asset": asset,
-	}
+	violation := issues[_]
+}
+
+# Confirm total violations count
+test_sql_public_ip_violations_count {
+	count(all_violations) == 3
+}
+
+test_sql_public_ip_violations_basic {
+	violation := all_violations[_]
+	violation.details.resource == "//cloudsql.googleapis.com/projects/test-project/instances/public-sql"
 }

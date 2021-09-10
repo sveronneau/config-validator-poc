@@ -14,21 +14,23 @@
 # limitations under the License.
 #
 
-package templates.gcp.GCPAlwaysViolatesConstraintV1
-
-import data.validator.gcp.lib as lib
+package templates.gcp.GCPStorageBucketWorldReadableConstraintV1
 
 deny[{
 	"msg": message,
 	"details": metadata,
 }] {
 	constraint := input.constraint
-	lib.get_constraint_info(constraint, info)
 	asset := input.asset
+	asset.asset_type == "storage.googleapis.com/Bucket"
 
-	message := sprintf("%v violates on all resources.", [info.name])
-	metadata := {
-		"constraint": info,
-		"asset": asset,
-	}
+	world_readable_checks := [
+		asset.iam_policy.bindings[_].members[_] == "allUsers",
+		asset.iam_policy.bindings[_].members[_] == "allAuthenticatedUsers",
+	]
+
+	world_readable_checks[_] == true
+
+	message := sprintf("%v is publicly accessable", [asset.name])
+	metadata := {"resource": asset.name}
 }

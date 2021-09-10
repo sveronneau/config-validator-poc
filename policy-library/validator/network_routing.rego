@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-package templates.gcp.GCPAlwaysViolatesConstraintV1
+package templates.gcp.GCPNetworkRoutingConstraintV1
 
 import data.validator.gcp.lib as lib
 
@@ -23,12 +23,14 @@ deny[{
 	"details": metadata,
 }] {
 	constraint := input.constraint
-	lib.get_constraint_info(constraint, info)
+	lib.get_constraint_params(constraint, params)
 	asset := input.asset
+	asset.asset_type == "compute.googleapis.com/Network"
 
-	message := sprintf("%v violates on all resources.", [info.name])
-	metadata := {
-		"constraint": info,
-		"asset": asset,
-	}
+	mode := lib.get_default(params, "mode", "GLOBAL")
+	network := asset.resource.data
+	network.routingConfig.routingMode != mode
+
+	message := sprintf("%v doesn't have %v routing.", [asset.name, mode])
+	metadata := {"resource": asset.name}
 }
