@@ -19,9 +19,7 @@ steps:
   dir: deployments/app1/dev
   args:
   - validate
-  - --tf-version 
-  - "0.12"
   - terraform.json
   - --policy-path=../../../policy-library/
   - --project
-  - "cf-gcp-challenge-dev"
+  - "validator-poc-325613"
