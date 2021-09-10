@@ -1,3 +1,3 @@
 provider "google" {
-  project = "validator-poc-325613"
+  project = "commons-build"
 }
