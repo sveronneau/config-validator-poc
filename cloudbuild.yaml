@@ -1,0 +1,27 @@
+---
+steps:
+- name: gcr.io/config-validator/terraform-validator
+  entrypoint: terraform
+  dir: deployments/app1/dev
+  args:
+  - init
+- name: gcr.io/config-validator/terraform-validator
+  dir: deployments/app1/dev
+  entrypoint: terraform
+  args:
+  - plan 
+  - -out=terraform.plan
+- name: gcr.io/config-validator/terraform-validator
+  entrypoint: "/bin/bash"
+  args: ['-c', 'terraform show -json terraform.plan > terraform.json']
+  dir: deployments/app1/dev
+- name: gcr.io/config-validator/terraform-validator
+  dir: deployments/app1/dev
+  args:
+  - validate
+  - --tf-version 
+  - "0.12"
+  - terraform.json
+  - --policy-path=../../../policy-library/
+  - --project
+  - "cf-gcp-challenge-dev"
