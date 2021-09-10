@@ -1,0 +1,11 @@
+---
+steps:
+- name: hashicorp/terraform
+  dir: deployments/${_DEPLOYMENT}/${_ENV_NAME}
+  args:
+  - init
+- name: hashicorp/terraform
+  dir: deployments/${_DEPLOYMENT}/${_ENV_NAME}
+  args:
+  - apply
+  - -auto-approve
