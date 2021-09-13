@@ -27,9 +27,6 @@ The template name appears in three places in a template YAML file:
 *   CRD kind (under "spec" > "crd" > "spec" > "names" > "kind"): Camel case. It
     has the format of "GCP{resource}{feature}Constraint{version}" (example:
     "GCPStorageLoggingConstraintV1").
-*   CRD plural name (under "spec" > "crd" > "spec" > "names" > "plural"): Same
-    as CRD kind but in all lower case with the word "constraints" replacing
-    "constraint" (example: "gcpstorageloggingconstraintsv1")
 
 Wherever possible, follow [gcloud](https://cloud.google.com/sdk/gcloud/) group
 names for resource naming. For example, use "compute" instead of "gce", "sql"
@@ -95,9 +92,9 @@ assigned to the VM.
       "parent": "//cloudresourcemanager.googleapis.com/projects/68478495408",
       "data": {
         "name": "vm-external-ip",
-        "networkInterface": [
+        "networkInterfaces": [
           {
-            "accessConfig": [
+            "accessConfigs": [
               {
                 "externalIp": "35.196.151.107",
                 "name": "external-nat",
@@ -154,7 +151,7 @@ As you develop the Rego rule, keep these principles in mind:
     as lib</em></code>.
 
 For example, this rule checks whether a VM with external IP address should be
-exempted (whitelist) or treated as a violation (blacklist):
+exempted (allowlist) or treated as a violation (denylist):
 
 ```
 package validator.gcp.GCPExternalIpAccessConstraintV1
@@ -172,7 +169,7 @@ deny[{
         instance := asset.resource.data
         access_config := instance.networkInterface[_].accessConfig
         external_ip := access_config[_].externalIp
-        # Check if instance is in blacklist/whitelist
+        # Check if instance is in allowlist/denylist
         target_instances := params.instances
         matches := {asset.name} & cast_set(target_instances)
         target_instance_match_count(params.mode, desired_count)
@@ -182,12 +179,12 @@ deny[{
 }
 
 # Determine the overlap between instances under test and constraint
-# By default (whitelist), we violate if there isn't overlap
+# By default (allowlist), we violate if there isn't overlap
 target_instance_match_count(mode) = 0 {
-        mode != "blacklist"
+        mode != "denylist"
 }
 target_instance_match_count(mode) = 1 {
-        mode == "blacklist"
+        mode == "denylist"
 }
 ```
 
@@ -207,13 +204,13 @@ For example, here is a sample constraint used for external IP rule:
 apiVersion: constraints.gatekeeper.sh/v1alpha1
 kind: GCPExternalIpAccessConstraintV1
 metadata:
-  name: forbid-external-ip-whitelist
+  name: forbid-external-ip-allowlist
 spec:
   severity: high
   match:
-    target: ["organization/*"]
+    target: ["organizations/**"]
   parameters:
-    mode: "whitelist"
+    mode: "allowlist"
     instances:
       - //compute.googleapis.com/projects/test-project/zones/us-east1-b/instances/vm-external-ip
 ```
@@ -254,16 +251,16 @@ find_violations[violation] {
         violation := issues[_]
 }
 
-whitelist_violations[violation] {
-        constraints := [fixture_constraints.forbid_external_ip_whitelist]
+allowlist_violations[violation] {
+        constraints := [fixture_constraints.forbid_external_ip_allowlist]
         found_violations := find_violations with data.instances as fixture_instances
                  with data.test_constraints as constraints
         violation := found_violations[_]
 }
 
-# Confirm only a single violation was found (whitelist constraint)
-test_external_whitelist_ip_violates_one {
-        found_violations := whitelist_violations
+# Confirm only a single violation was found (allowlist constraint)
+test_external_allowlist_ip_violates_one {
+        found_violations := allowlist_violations
         count(found_violations) = 1
         violation := found_violations[_]
         resource_name := "//compute.googleapis.com/projects/test-project/zones/us-east1-b/instances/vm-external-ip"
@@ -296,13 +293,12 @@ spec:
     spec:
       names:
         kind: GCPExternalIpAccessConstraintV1
-        plural: gcpexternalipaccessconstraintsv1
       validation:
         openAPIV3Schema:
           properties:
             mode:
               type: string
-              enum: [blacklist, whitelist]
+              enum: [denylist, allowlist]
             instances:
               type: array
               items: string

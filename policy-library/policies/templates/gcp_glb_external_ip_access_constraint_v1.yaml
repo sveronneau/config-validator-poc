@@ -23,7 +23,6 @@ spec:
     spec:
       names:
         kind: GCPGLBExternalIpAccessConstraintV1
-        plural: gcpglbexternalipaccessconstraintv1
       validation:
         openAPIV3Schema:
           properties:
@@ -32,10 +31,11 @@ spec:
               enum: [denylist, allowlist]
             instances:
               type: array
-              items: string
+              items:
+                type: string
   targets:
     validation.gcp.forsetisecurity.org:
-      rego: |#INLINE("validator/gcp_glb_external_ip.rego")
+      rego: | #INLINE("validator/gcp_glb_external_ip.rego")
            #
            # Copyright 2018 Google LLC
            #

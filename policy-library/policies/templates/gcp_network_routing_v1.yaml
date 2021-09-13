@@ -21,12 +21,12 @@ spec:
     spec:
       names:
         kind: GCPNetworkRoutingConstraintV1
-        plural: gcpnetworkroutingconstraintsv1
       validation:
         openAPIV3Schema:
-          mode:
-            type: string
-            default: GLOBAL
+          properties:
+            mode:
+              type: string
+              #default: GLOBAL
   targets:
     validation.gcp.forsetisecurity.org:
       rego: | #INLINE("validator/network_routing.rego")
