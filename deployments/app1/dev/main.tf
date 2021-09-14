@@ -5,7 +5,7 @@ resource "google_storage_bucket" "image-store-1" {
   location = "europe-north1"
   #location = "northamerica-northeast2"
   #labels   = {
-      cost-center  = "IT"
+      cost-center  = "it"
   #    cost-center  = "marketing"
   #    env = "qa"
   #}
