@@ -41,8 +41,8 @@ spec:
     #
     # A violation is raised if the label value does not match the pattern passed as a parameter here.
     mandatory_labels:
-    - "cost-center": "marketing", "it", "project-x"
-    - "env": "dev", "qa"
+    - "cost-center": "marketing"
+    - "env": "qa"
 
     # optional parameter: list of resource types to scan for labels
     # any resource that is not of these types will not raise any violation.
